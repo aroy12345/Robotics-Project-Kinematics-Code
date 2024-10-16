@@ -67,8 +67,22 @@ class FK():
 
         return jointPositions, T0e
 
-    def get_axis_of_rotation(self, q):
-        raise NotImplementedError("This method is not implemented yet.")
+    def get_axis_of_rotation(self, q_in, i):
+        """
+        Get the axis of rotation for joint i given the joint angles q_in
+        
+        :param q_in: 1x7 vector of joint angles
+        :param i: index of the joint (0-6)
+        :return: 3x1 unit vector representing the axis of rotation
+        """
+        # Compute the transformation up to joint i
+        T = np.eye(4)
+        for j in range(i):
+            a, alpha, d, theta = self.dh_table[j]
+            T = T @ self.dh_transform(a, d, alpha, q_in[j])
+        
+        # The axis of rotation is the z-axis of this transformation
+        return T[:3, 2]
 
     def compute_Ai(self, q):
         raise NotImplementedError("This method is not implemented yet.")

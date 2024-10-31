@@ -57,98 +57,77 @@ class JacobianDemo():
     ##################
     ## TRAJECTORIES ##
     ##################
-
-    def eight(t,fx=0.5,fy=1.0,rx=.15,ry=.1):
-        """
-        Calculate the position and velocity of the figure 8 trajector
-
-        Inputs:
-        t - time in sec since start
-        fx - frequecny in rad/s of the x portion
-        fy - frequency in rad/s of the y portion
-        rx - radius in m of the x portion
-        ry - radius in m of the y portion
-
-        Outputs:
-        xdes = 0x3 np array of target end effector position in the world frame
-        vdes = 0x3 np array of target end effector linear velocity in the world frame
-        Rdes = 3x3 np array of target end effector orientation in the world frame
-        ang_vdes = 0x3 np array of target end effector orientation velocity in the rotation vector representation in the world frame
-        """
-
-        # Lissajous Curve
-        x0 = np.array([0.307, 0, 0.487]) # corresponds to neutral position
-        xdes = x0 + np.array([rx*sin(fx*t),ry*sin(fy*t),0])
-        vdes = np.array([rx*fx*cos(fx*t),ry*fy*cos(fy*t),0])
-
-        # TODO: replace these!
-        Rdes = np.diag([1., -1., -1.])
-        ang_vdes = 0.0 * np.array([1.0, 0.0, 0.0])
-
-        return Rdes, ang_vdes, xdes, vdes
-
-    def ellipse(t,f=0.5,ry=.15,rz=.10):
-        """
-        Calculate the position and velocity of the figure ellipse trajector
-
-        Inputs:
-        t - time in sec since start
-        f - frequecny in rad/s of the trajectory
-        rx - radius in m of the x portion
-        ry - radius in m of the y portion
-
-        Outputs:
-        xdes = 0x3 np array of target end effector position in the world frame
-        vdes = 0x3 np array of target end effector linear velocity in the world frame
-        Rdes = 3x3 np array of target end effector orientation in the world frame
-        ang_vdes = 0x3 np array of target end effector orientation velocity in the rotation vector representation in the world frame
-        """
-
-        x0 = np.array([0.307, 0, 0.487]) # corresponds to neutral position
-
-        ## STUDENT CODE GOES HERE
-
-        # TODO: replace these!
-        xdes = JacobianDemo.x0
-        vdes = np.array([0,0,0])
-        Rdes = np.diag([1., -1., -1.])
-        ang_vdes = 0.0 * np.array([1.0, 0.0, 0.0])
-        ## END STUDENT CODE
+    @staticmethod
+    def ellipse(t, f=0.5, ry=0.15, rz=0.10):
+        x0 = JacobianDemo.x0
+        
+        # Position
+        y = ry * sin(2 * pi * f * t)
+        z = rz * cos(2 * pi * f * t)
+        xdes = x0 + np.array([0, y, z])
+        
+        # Velocity
+        vy = 2 * pi * f * ry * cos(2 * pi * f * t)
+        vz = -2 * pi * f * rz * sin(2 * pi * f * t)
+        vdes = np.array([0, vy, vz])
+        
+        # Orientation (rotating around x-axis)
+        ang = pi/4 * sin(2 * pi * f * t)
+        r = ang * np.array([1.0, 0.0, 0.0])
+        Rdes = rotvec_to_matrix(r)
+        
+        # Angular velocity
+        ang_v = pi/4 * 2 * pi * f * cos(2 * pi * f * t)
+        ang_vdes = ang_v * np.array([1.0, 0.0, 0.0])
         
         return Rdes, ang_vdes, xdes, vdes
 
-    def line(t,f=1.0,L=.15):
-        """
-        Calculate the position and velocity of the line trajector
-
-        Inputs:
-        t - time in sec since start
-        f - frequecny in Hz of the line trajectory
-        L - length of the line in meters
-
-        Outputs:
-        xdes = 0x3 np array of target end effector position in the world frame
-        vdes = 0x3 np array of target end effector linear velocity in the world frame
-        Rdes = 3x3 np array of target end effector orientation in the world frame
-        ang_vdes = 0x3 np array of target end effector orientation velocity in the rotation vector representation in the world frame
-        """
-        ## STUDENT CODE GOES HERE
-        x0 = np.array([0.307,0,0.487]) #corresponds to neutral position
-        # TODO: replace these!
-        xdes = JacobianDemo.x0
-        vdes = np.array([0,0,0])
-
-        # Example for generating an orientation trajectory
-        # The end effector will rotate around the x-axis during the line motion
-        # following the changing ang
-        ang = -np.pi + (np.pi/4.0) * sin(f*t)
+    @staticmethod
+    def line(t, f=1.0, L=0.15):
+        x0 = JacobianDemo.x0
+        
+        # Position
+        z = (L/2) * sin(2 * pi * f * t)
+        xdes = x0 + np.array([0, 0, z])
+        
+        # Velocity
+        vz = (L/2) * 2 * pi * f * cos(2 * pi * f * t)
+        vdes = np.array([0, 0, vz])
+        
+        # Orientation (rotating around x-axis)
+        ang = -np.pi + (np.pi/4.0) * sin(2 * pi * f * t)
         r = ang * np.array([1.0, 0.0, 0.0])
         Rdes = rotvec_to_matrix(r)
-
-        ang_v = (np.pi/4.0) * f * cos(f*t)
+        
+        # Angular velocity
+        ang_v = (np.pi/4.0) * 2 * pi * f * cos(2 * pi * f * t)
         ang_vdes = ang_v * np.array([1.0, 0.0, 0.0])
+        
+        return Rdes, ang_vdes, xdes, vdes
 
-        ## END STUDENT CODE
+    @staticmethod
+    def eight(t, fx=0.5, fy=1.0, rx=0.15, ry=0.1):
+        x0 = JacobianDemo.x0
+        
+        # Position (Lissajous Curve)
+        xdes = x0 + np.array([rx * sin(2 * pi * fx * t), ry * sin(2 * pi * fy * t), 0])
+        
+        # Velocity
+        vdes = np.array([
+            rx * 2 * pi * fx * cos(2 * pi * fx * t),
+            ry * 2 * pi * fy * cos(2 * pi * fy * t),
+            0
+        ])
+        
+        # Orientation (rotating around z-axis)
+        ang = pi/4 * sin(2 * pi * (fx + fy) * t / 2)
+        r = ang * np.array([0.0, 0.0, 1.0])
+        Rdes = rotvec_to_matrix(r)
+        
+        # Angular velocity
+        ang_v = pi/4 * 2 * pi * (fx + fy) / 2 * cos(2 * pi * (fx + fy) * t / 2)
+        ang_vdes = ang_v * np.array([0.0, 0.0, 1.0])
+        
         return Rdes, ang_vdes, xdes, vdes
 
     ###################

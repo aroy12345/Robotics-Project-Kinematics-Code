@@ -8,25 +8,34 @@ Lab 3
 
 def IK_velocity_null(q_in, v_in, omega_in, b):
     """
-    :param q_in: 1 x 7 vector corresponding to the robot's current configuration.
-    :param v_in: The desired linear velocity in the world frame. If any element is
-    Nan, then that velocity can be anything
-    :param omega_in: The desired angular velocity in the world frame. If any
-    element is Nan, then that velocity is unconstrained i.e. it can be anything
-    :param b: 7 x 1 Secondary task joint velocity vector
-    :return:
-    dq + null - 1 x 7 vector corresponding to the joint velocities + secondary task null velocities
+    Implements inverse velocity kinematics with a null space secondary task
     """
+    # Calculate the Jacobian
+    J = calcJacobian(q_in)
+    
+    # Combine v_in and omega_in for the primary task
+    v_omega = np.concatenate([v_in, omega_in])
+    
+    # Create mask for non-NaN values
+    mask = ~np.isnan(v_omega)
+    
+    # Get the masked Jacobian and velocity vector for primary task
+    J_masked = J[mask]
+    v_omega_masked = v_omega[mask].reshape(-1, 1)
+    
+    # Calculate the pseudoinverse of the masked Jacobian
+    J_pinv = np.linalg.pinv(J_masked)
+    
+    # Calculate primary task joint velocities
+    dq = J_pinv @ v_omega_masked
+    
+    # Calculate null space projector
+    N = np.eye(7) - J_pinv @ J_masked
+    
+    # Calculate null space velocity
+    null = (N @ b).T
+    
+    # Combine primary and null space velocities
+    return dq.T + null
 
-    ## STUDENT CODE GOES HERE
-    dq = np.zeros((1, 7))
-    null = np.zeros((1, 7))
-    b = b.reshape((7, 1))
-    v_in = np.array(v_in)
-    v_in = v_in.reshape((3,1))
-    omega_in = np.array(omega_in)
-    omega_in = omega_in.reshape((3,1))
-
-
-    return dq + null
 

@@ -1,1 +1,1 @@
-
+This project implements a comprehensive robotic control system capable of handling both static and dynamic block stacking. The system utilizes inverse kinematics (IK) for precise robotic arm control, computer vision for block detection and tracking, and multithreaded computation for optimized performance.
